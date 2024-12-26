@@ -29,7 +29,7 @@ int main(int argc, char* argv[]){
         return -1;
     }
 
-    p = fork();
+    p = fork(); //возвращает id родительского процесса
 
     if(p < 0){
         stdout_write("Fork failed!\n", 13);
@@ -58,13 +58,13 @@ int main(int argc, char* argv[]){
     else{
         //дочерний процесс, отсюда нужно запустить следующую программу с передачей аругментов 
         // + не забыть про filename первым аргументом
-        /* close(STDOUT_FILENO);
-        dup(fd2[1]); */
-        dup2(fd2[1], STDOUT_FILENO);
-        dup2(fd1[0], STDIN_FILENO);
+        close(STDOUT_FILENO);
+        dup(fd2[1]);
+        /* dup2(fd2[1], STDOUT_FILENO);
+        dup2(fd1[0], STDIN_FILENO); */
 
-        /* close(STDIN_FILENO);
-        dup(fd1[0]); */
+        close(STDIN_FILENO);
+        dup(fd1[0]);
 
         close(fd1[0]);
         close(fd1[1]);
