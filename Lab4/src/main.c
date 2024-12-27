@@ -11,59 +11,60 @@ void* (*allocate)(const size_t size);
 void (*deallocate)(const void* memory);
 
 
-int init_lstlib(){
+void* init_lstlib(){
     void *hdl = dlopen("./lib/liblstalloc.so", RTLD_LAZY);
     if(hdl == NULL){
-        return 0;
+        return NULL;
     }
     allocate = (void* (*)(const size_t))dlsym(hdl, "allocate");
     if(allocate == NULL){
-        return 0;
+        return NULL;
     }
     deallocate = (void (*)(const void*))dlsym(hdl, "deallocate");
     if(deallocate == NULL){
-        return 0;
+        return NULL;
     }
-    return 1;
+    return hdl;
 }
 
-int init_tbllib(){
+void* init_tbllib(){
     void *hdl = dlopen("./lib/libtblalloc.so", RTLD_LAZY);
     if(hdl == NULL){
-        return 0;
+        return NULL;
     }
     allocate = (void* (*)(const size_t))dlsym(hdl, "allocate");
     if(allocate == NULL){
-        return 0;
+        return NULL;
     }
     deallocate = (void (*)(const void*))dlsym(hdl, "deallocate");
     if(deallocate == NULL){
-        return 0;
+        return NULL;
     }
-    return 1;
+    return hdl;
 }
 
-int init_stdlib(){
+void* init_stdlib(){
     void *hdl = dlopen("./lib/libstd.so", RTLD_LAZY);
     if(hdl == NULL){
-        return 0;
+        return NULL;
     }
     allocate = (void* (*)(const size_t))dlsym(hdl, "custom_malloc");
     if(allocate == NULL){
-        return 0;
+        return NULL;
     }
     deallocate = (void (*)(const void*))dlsym(hdl, "custom_free");
     if(deallocate == NULL){
-        return 0;
+        return NULL;
     }
-    return 1;
+    return hdl;
 }
 
 int main(int argc, char const *argv[])
 {
+    void* hdl;
     char allocator_name[100];
     if(argc != 2){
-        if(init_stdlib() != 1){
+        if((hdl = init_stdlib()) == NULL){
             my_write("Library not found!\n");
             return -1;
         }
@@ -71,13 +72,13 @@ int main(int argc, char const *argv[])
     }
     else{
         if(!strcmp("List", argv[1])){
-            if(init_lstlib() != 1){
+            if((hdl = init_lstlib()) == NULL){
                 my_write("Library not found!\n");
                 return -1;
             }
         }
         else if(!strcmp("Table", argv[1])){
-            if(init_tbllib() != 1){
+            if((hdl = init_tbllib()) == NULL){
                 my_write("Library not found!\n");
                 return -1;
             }
@@ -89,11 +90,11 @@ int main(int argc, char const *argv[])
         strcpy(allocator_name, argv[1]);
     }
 
-    
+    clock_t start = clock();
     int** array = (int**)allocate(sizeof(int*) * 50000);
     int iter = 0;
 
-    clock_t start = clock();
+    
     for (size_t i = 1; i <= 10; i++)
     {
         for (size_t j = 0; j < 5000; j++)
@@ -129,5 +130,8 @@ int main(int argc, char const *argv[])
     end = clock();
     my_write("Memory deallocating with library <"); my_write(allocator_name); my_write("> lasts: "); print_int((end - start) / 1000); my_write(" ms\n");
     print_int(50000);my_write(" int* deallocated.\n");
+
+    dlclose(hdl);
+
     return 0;
 }
