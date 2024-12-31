@@ -38,6 +38,7 @@ void allocator_destroy(const Allocator* allocator){
         return;
     }
     munmap(allocator->memory - sizeof(Allocator), allocator->size + sizeof(Allocator));
+    allocator = NULL;
     return;
 }
 
@@ -46,28 +47,9 @@ void allocator_destroy_exit(){
         return;
     }
     munmap(allocator->memory - sizeof(Allocator), allocator->size + sizeof(Allocator));
+    allocator = NULL;
     return;
 }
-
-/* Allocator* allocator_resize(const Allocator* allocator, const size_t size){
-    if(allocator == NULL){
-        return NULL;
-    }
-    void* memory = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    if(memory == NULL){
-        return NULL;
-    }
-    Allocator* allocator_new = (Allocator*)memory;
-    allocator_new->memory = (void*)((char*)memory + sizeof(Allocator));
-    allocator_new->size = size - sizeof(Allocator);
-    allocator_new->head_of_blocks = (struct Block*)allocator_new->memory;
-
-    allocator_new->head_of_blocks->size = allocator_new->size;
-    allocator_new->head_of_blocks->next = NULL;
-    memcpy(allocator_new->memory, allocator->memory, allocator->size);
-    allocator_destroy(allocator);
-    return allocator_new;
-} */
 
 void* allocator_alloc(const Allocator* allocator, const size_t size){
     if(allocator == NULL){
@@ -160,7 +142,7 @@ void allocator_free(const Allocator* allocator, const void* memory){
 
 void* allocate(const size_t size){
     if(allocator == NULL){
-        allocator = allocator_create(NULL, sysconf(_SC_PAGE_SIZE) * sysconf(_SC_PAGE_SIZE));
+        allocator = allocator_create(NULL, 1024 * 1024 * 1024 * 1.75);
         if(allocator == NULL){
             return NULL;
         }

@@ -7,7 +7,7 @@
 
 #include <stdlib.h>
 
-#define POWERS_AMOUNT 20
+#define POWERS_AMOUNT 25
 
 
 static Allocator* allocator = NULL;
@@ -68,6 +68,7 @@ void allocator_destroy(const Allocator* allocator){
         }
         munmap((void*)((char*)allocator->head[j]->memory - sizeof(struct Header)), allocator->size_of_block);
     }
+    allocator = NULL;
     return;
 }
 
@@ -80,6 +81,7 @@ void allocator_destroy_exit(){
         }
         munmap((void*)((char*)allocator->head[j]->memory - sizeof(struct Header)), allocator->size_of_block);
     }
+    allocator = NULL;
     return;
 }
 
@@ -112,7 +114,7 @@ void* allocator_alloc(const Allocator* allocator, const size_t size){
         empty_memo_between += delta <= 0? 0: delta; 
 
         mode = empty->next == NULL ? 0 : 1;
-        if(empty != prev && (char*)empty - (char*)prev - sizeof(struct Block) - prev->size >= /* size */ 1 << power){
+        if(empty != prev && (char*)empty - (char*)prev - sizeof(struct Block) - prev->size >= 1 << power){
             break;
         }
     }
@@ -181,7 +183,7 @@ void allocator_free(const Allocator* allocator, const void* memory){
 
 void* allocate(const size_t size){
     if(allocator == NULL){
-        allocator = allocator_create(sysconf(_SC_PAGE_SIZE) * sysconf(_SC_PAGE_SIZE));
+        allocator = allocator_create(1024 * 1024 * 1024);
         if(allocator == NULL){
             return NULL;
         }

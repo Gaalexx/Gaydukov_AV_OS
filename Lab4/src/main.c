@@ -2,9 +2,14 @@
 #include <string.h>
 #include <dlfcn.h>
 #include <time.h>
-
 #include "myio.h"
 #include "intstr.h"
+
+//#include "VirtualAllocTwo.h"
+
+#define TEST_SIZE 750000
+#define MAX_BLOCK_SIZE 10
+#define TYPE int
 
 void* (*allocate)(const size_t size);
 
@@ -90,16 +95,20 @@ int main(int argc, char const *argv[])
         strcpy(allocator_name, argv[1]);
     }
 
-    clock_t start = clock();
-    int** array = (int**)allocate(sizeof(int*) * 50000);
-    int iter = 0;
 
-    
-    for (size_t i = 1; i <= 10; i++)
+    //char allocator_name[] = "Table";
+    int iter = 0;
+    unsigned long long int allocated_sum = 0;
+    clock_t start = clock();
+    TYPE** array = (TYPE**)allocate(sizeof(TYPE*) * TEST_SIZE);
+    size_t siz;
+    for (size_t i = 1; i <= MAX_BLOCK_SIZE; i++)
     {
-        for (size_t j = 0; j < 5000; j++)
+        for (size_t j = 0; j < TEST_SIZE / MAX_BLOCK_SIZE; j++)
         {
-            array[iter++] = allocate(sizeof(int) * i);
+            siz = sizeof(TYPE) * (1 << i);
+            array[iter++] = (TYPE*)allocate(siz);
+            allocated_sum += siz;
             if(array[iter - 1] == NULL){
                 for (size_t k = 0; k < iter; k++)
                 {
@@ -113,14 +122,8 @@ int main(int argc, char const *argv[])
     }
     clock_t end = clock();
     my_write("Memory allocating with library <"); my_write(allocator_name); my_write("> lasts: "); print_int((end - start) / 1000); my_write(" ms\n");
-    print_int(50000);my_write(" int* allocated.\n");
+    print_int(allocated_sum);my_write(" bytes allocated.\n");
 
-/* 
-    for (size_t i = 0; i < iter; i++)
-    {
-        array[i][0] = i;
-    }
- */
     start = clock();
     for (int i = iter - 1; i >= 0; i--)
     {
@@ -129,7 +132,7 @@ int main(int argc, char const *argv[])
     deallocate(array);
     end = clock();
     my_write("Memory deallocating with library <"); my_write(allocator_name); my_write("> lasts: "); print_int((end - start) / 1000); my_write(" ms\n");
-    print_int(50000);my_write(" int* deallocated.\n");
+    print_int(allocated_sum);my_write(" bytes deallocated.\n");
 
     dlclose(hdl);
 

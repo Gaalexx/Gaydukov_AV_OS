@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <sys/mman.h>
 
-#define POWERS_AMOUNT 20
+#define POWERS_AMOUNT 25
 
 struct Block {
     size_t size;                
